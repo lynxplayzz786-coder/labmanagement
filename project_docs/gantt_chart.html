@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gantt Chart - LabMS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            width: 900px;
+            padding: 20px;
+            border: 2px solid #333;
+            background: #fff;
+        }
+        h2 {
+            text-align: center;
+            margin-top: 0;
+            color: #111;
+            font-size: 22px;
+            text-transform: uppercase;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th, td {
+            border: 1px solid #999;
+            padding: 8px 4px;
+            text-align: center;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            color: #000;
+        }
+        .task-col {
+            text-align: left;
+            font-weight: bold;
+            width: 250px;
+            background-color: #fafafa;
+            padding-left: 10px;
+        }
+        
+        /* Colored Bars */
+        .bar-p1 { background-color: #007bff; color: white; font-weight: bold; border-radius: 4px; border: 1px solid #0056b3; }
+        .bar-p2 { background-color: #6f42c1; color: white; font-weight: bold; border-radius: 4px; border: 1px solid #5a32a3; }
+        .bar-p3 { background-color: #28a745; color: white; font-weight: bold; border-radius: 4px; border: 1px solid #1e7e34; }
+        .bar-p4 { background-color: #fd7e14; color: white; font-weight: bold; border-radius: 4px; border: 1px solid #d36900; }
+        
+        /* Inner div to make it look like a bar inside the table cell */
+        .bar {
+            padding: 4px 0;
+            display: block;
+            width: 100%;
+        }
+        
+        td:not(.task-col) {
+            width: 35px; /* Equal width for week columns */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>15-Week Project Progress Plan</h2>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th class="task-col">Task Description</th>
+                    <th>W1</th><th>W2</th><th>W3</th><th>W4</th>
+                    <th>W5</th><th>W6</th><th>W7</th><th>W8</th>
+                    <th>W9</th><th>W10</th><th>W11</th><th>W12</th>
+                    <th>W13</th><th>W14</th><th>W15</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- ROW 1 -->
+                <tr>
+                    <td class="task-col">1. Literature Review & Problem</td>
+                    <td colspan="2"><div class="bar bar-p1">Phase 1</div></td>
+                    <td></td><td></td><td></td><td></td><td></td><td></td>
+                    <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                </tr>
+                
+                <!-- ROW 2 -->
+                <tr>
+                    <td class="task-col">2. Objective & Methodology</td>
+                    <td></td><td></td>
+                    <td colspan="2"><div class="bar bar-p1">Phase 1</div></td>
+                    <td></td><td></td><td></td><td></td><td></td><td></td>
+                    <td></td><td></td><td></td><td></td><td></td>
+                </tr>
+
+                <!-- ROW 3 -->
+                <tr>
+                    <td class="task-col">3. Tool Setup & Initial Dev</td>
+                    <td></td><td></td><td></td><td></td>
+                    <td colspan="2"><div class="bar bar-p2">Phase 2</div></td>
+                    <td></td><td></td><td></td><td></td><td></td><td></td>
+                    <td></td><td></td><td></td>
+                </tr>
+
+                <!-- ROW 4 -->
+                <tr>
+                    <td class="task-col">4. Mid Review & Progress Report</td>
+                    <td></td><td></td><td></td><td></td><td></td><td></td>
+                    <td colspan="2"><div class="bar bar-p2">Phase 2</div></td>
+                    <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                </tr>
+
+                <!-- ROW 5 -->
+                <tr>
+                    <td class="task-col">5. Implementation Phase</td>
+                    <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                    <td colspan="3"><div class="bar bar-p3">Phase 3</div></td>
+                    <td></td><td></td><td></td><td></td>
+                </tr>
+
+                <!-- ROW 6 -->
+                <tr>
+                    <td class="task-col">6. Testing & Validation</td>
+                    <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                    <td></td><td></td><td></td>
+                    <td colspan="2"><div class="bar bar-p3">Phase 3</div></td>
+                    <td></td><td></td>
+                </tr>
+
+                <!-- ROW 7 -->
+                <tr>
+                    <td class="task-col">7. Draft Report Preparation</td>
+                    <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                    <td></td><td></td><td></td><td></td><td></td>
+                    <td colspan="1"><div class="bar bar-p4">P4</div></td>
+                    <td></td>
+                </tr>
+
+                <!-- ROW 8 -->
+                <tr>
+                    <td class="task-col">8. Final Review & Submission</td>
+                    <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                    <td></td><td></td><td></td><td></td><td></td><td></td>
+                    <td colspan="1"><div class="bar bar-p4">P4</div></td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

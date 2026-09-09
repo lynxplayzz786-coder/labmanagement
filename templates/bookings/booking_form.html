@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% block title %}New Booking Request{% endblock %}
+{% block page_title %}New Booking{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>New Booking Request</h1>
+  <div class="breadcrumb">
+    <a href="{% url 'bookings:my_bookings' %}">My Bookings</a> / New Request
+  </div>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header">
+        <h5><i class="fas fa-calendar-plus me-2 text-primary"></i>Request Equipment</h5>
+      </div>
+      <div class="card-body">
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger mb-4" style="font-size:13px;">
+          <i class="fas fa-exclamation-circle me-2"></i>{{ form.non_field_errors.0 }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'bookings:new_booking' %}" id="bookingForm">
+          {% csrf_token %}
+
+          <!-- Equipment -->
+          <div class="mb-3">
+            <label class="form-label">Equipment <span style="color:#ef4444">*</span></label>
+            <select name="equipment" id="id_equipment"
+              class="form-select {% if form.equipment.errors %}is-invalid{% endif %}" required>
+              <option value="">-- Select Equipment --</option>
+              {% for eq in form.equipment.field.queryset %}
+              <option value="{{ eq.pk }}"
+                {% if form.equipment.value|stringformat:"s" == eq.pk|stringformat:"s" %}selected{% endif %}>
+                {{ eq.asset_id }} — {{ eq.name }} (Available: {{ eq.available_quantity }})
+              </option>
+              {% endfor %}
+            </select>
+            {% if form.equipment.errors %}
+            <div class="invalid-feedback">{{ form.equipment.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Quantity -->
+          <div class="mb-3">
+            <label class="form-label">Quantity <span style="color:#ef4444">*</span></label>
+            <input type="number" name="quantity" min="1"
+              class="form-control {% if form.quantity.errors %}is-invalid{% endif %}"
+              value="{{ form.quantity.value|default:1 }}" required>
+            {% if form.quantity.errors %}
+            <div class="invalid-feedback">{{ form.quantity.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Dates -->
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Required From <span style="color:#ef4444">*</span></label>
+              <input type="date" name="required_from"
+                class="form-control {% if form.required_from.errors %}is-invalid{% endif %}"
+                value="{{ form.required_from.value|default:'' }}"
+                min="{{ today }}" required>
+              {% if form.required_from.errors %}
+              <div class="invalid-feedback">{{ form.required_from.errors.0 }}</div>
+              {% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Return By <span style="color:#ef4444">*</span></label>
+              <input type="date" name="required_till"
+                class="form-control {% if form.required_till.errors %}is-invalid{% endif %}"
+                value="{{ form.required_till.value|default:'' }}"
+                min="{{ today }}" required>
+              {% if form.required_till.errors %}
+              <div class="invalid-feedback">{{ form.required_till.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="mb-4">
+            <label class="form-label">Purpose / Notes</label>
+            <textarea name="notes" rows="3" class="form-control"
+              placeholder="Purpose, project name, or any other relevant information…">{{ form.notes.value|default:'' }}</textarea>
+          </div>
+
+          <!-- Info Box -->
+          <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px;
+                      padding:12px 16px; margin-bottom:20px; font-size:13px; color:#0369a1;">
+            <i class="fas fa-info-circle me-2"></i>
+            Your request will be reviewed by lab staff. You will be able to track
+            the status under <strong>My Bookings</strong>.
+          </div>
+
+          <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-primary px-4" id="submitBtn">
+              <i class="fas fa-paper-plane me-2"></i>Submit Request
+            </button>
+            <a href="{% url 'bookings:my_bookings' %}" class="btn btn-outline-primary px-4">
+              Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Set today's min date
+  const today = new Date().toISOString().split('T')[0];
+  document.querySelectorAll('input[type=date]').forEach(el => el.min = today);
+
+  // Sync return date min with from date
+  const fromDate = document.querySelector('[name=required_from]');
+  const tillDate = document.querySelector('[name=required_till]');
+  fromDate.addEventListener('change', () => tillDate.min = fromDate.value);
+
+  document.getElementById('bookingForm').addEventListener('submit', function() {
+    const btn = document.getElementById('submitBtn');
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i>Submitting…';
+    btn.disabled = true;
+  });
+</script>
+{% endblock %}

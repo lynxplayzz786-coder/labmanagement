@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Reject Booking{% endblock %}
+{% block page_title %}Reject Booking{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Reject Booking</h1>
+  <div class="breadcrumb">
+    <a href="{% url 'bookings:manage_bookings' %}">Manage Bookings</a> / Reject
+  </div>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header">
+        <h5><i class="fas fa-times-circle me-2 text-danger"></i>Reject Booking — {{ booking.booking_ref }}</h5>
+      </div>
+      <div class="card-body">
+        <!-- Summary -->
+        <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px;
+                    padding:14px 16px; margin-bottom:20px; font-size:13px;">
+          <div><strong>Requester:</strong> {{ booking.requester.get_full_name|default:booking.requester.username }}</div>
+          <div><strong>Equipment:</strong> {{ booking.equipment.name }} ({{ booking.equipment.asset_id }})</div>
+          <div><strong>Quantity:</strong> {{ booking.quantity }}</div>
+          <div><strong>Dates:</strong> {{ booking.required_from }} → {{ booking.required_till }}</div>
+        </div>
+
+        <form method="POST" action="{% url 'bookings:reject_booking' booking.pk %}">
+          {% csrf_token %}
+          <div class="mb-4">
+            <label class="form-label">Rejection Reason <span style="color:#ef4444">*</span></label>
+            <textarea name="rejection_reason" rows="4" class="form-control {% if form.rejection_reason.errors %}is-invalid{% endif %}"
+              placeholder="Provide a clear reason for rejection (visible to the requester)…" required>{{ form.rejection_reason.value|default:'' }}</textarea>
+            {% if form.rejection_reason.errors %}
+            <div class="invalid-feedback">{{ form.rejection_reason.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-danger px-4">
+              <i class="fas fa-times-circle me-2"></i>Confirm Rejection
+            </button>
+            <a href="{% url 'bookings:manage_bookings' %}" class="btn btn-outline-primary px-4">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

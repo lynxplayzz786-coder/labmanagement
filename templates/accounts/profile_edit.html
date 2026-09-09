@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% block title %}Edit Profile{% endblock %}
+{% block page_title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Edit Profile</h1>
+  <div class="breadcrumb">
+    <a href="{% url 'accounts:profile' %}">Profile</a> / Edit
+  </div>
+</div>
+
+<div class="row g-4 justify-content-center">
+
+  <!-- Profile Info Form -->
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header">
+        <h5><i class="fas fa-user-edit me-2 text-primary"></i>Personal Information</h5>
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="profile">
+
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label">First Name</label>
+              <input type="text" name="first_name" class="form-control {% if edit_form.first_name.errors %}is-invalid{% endif %}"
+                     value="{{ edit_form.first_name.value|default:'' }}" required>
+              {% if edit_form.first_name.errors %}<div class="invalid-feedback">{{ edit_form.first_name.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-6">
+              <label class="form-label">Last Name</label>
+              <input type="text" name="last_name" class="form-control {% if edit_form.last_name.errors %}is-invalid{% endif %}"
+                     value="{{ edit_form.last_name.value|default:'' }}">
+              {% if edit_form.last_name.errors %}<div class="invalid-feedback">{{ edit_form.last_name.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-12">
+              <label class="form-label">Email</label>
+              <input type="email" name="email" class="form-control {% if edit_form.email.errors %}is-invalid{% endif %}"
+                     value="{{ edit_form.email.value|default:'' }}" required>
+              {% if edit_form.email.errors %}<div class="invalid-feedback">{{ edit_form.email.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-12">
+              <label class="form-label">Phone</label>
+              <input type="text" name="phone" class="form-control"
+                     placeholder="9876543210"
+                     value="{{ edit_form.phone.value|default:'' }}">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Department</label>
+              <input type="text" name="department" class="form-control"
+                     placeholder="BCA / B.Tech / MCA"
+                     value="{{ edit_form.department.value|default:'' }}">
+            </div>
+            {% if request.user.role == 'student' %}
+            <div class="col-12">
+              <label class="form-label">Enrollment Number</label>
+              <input type="text" name="enrollment_no" class="form-control"
+                     placeholder="BCA2024001"
+                     value="{{ edit_form.enrollment_no.value|default:'' }}">
+            </div>
+            {% endif %}
+          </div>
+
+          {% if edit_form.non_field_errors %}
+          <div class="alert alert-danger mt-3" style="font-size:13px;">
+            <i class="fas fa-exclamation-circle me-2"></i>{{ edit_form.non_field_errors.0 }}
+          </div>
+          {% endif %}
+
+          <div class="d-flex gap-3 mt-4">
+            <button type="submit" class="btn btn-primary px-4">
+              <i class="fas fa-save me-2"></i>Save Changes
+            </button>
+            <a href="{% url 'accounts:profile' %}" class="btn btn-outline-primary px-4">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change Password Form -->
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header">
+        <h5><i class="fas fa-lock me-2 text-warning"></i>Change Password</h5>
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="password">
+
+          <div class="mb-3">
+            <label class="form-label">Current Password</label>
+            <input type="password" name="current_password"
+                   class="form-control {% if pwd_form.current_password.errors %}is-invalid{% endif %}"
+                   placeholder="Enter current password" required>
+            {% if pwd_form.current_password.errors %}
+            <div class="invalid-feedback">{{ pwd_form.current_password.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">New Password</label>
+            <input type="password" name="new_password1"
+                   class="form-control {% if pwd_form.new_password1.errors %}is-invalid{% endif %}"
+                   placeholder="Min. 8 characters" required>
+            {% if pwd_form.new_password1.errors %}
+            <div class="invalid-feedback">{{ pwd_form.new_password1.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">Confirm New Password</label>
+            <input type="password" name="new_password2"
+                   class="form-control {% if pwd_form.new_password2.errors %}is-invalid{% endif %}"
+                   placeholder="Repeat new password" required>
+            {% if pwd_form.new_password2.errors %}
+            <div class="invalid-feedback">{{ pwd_form.new_password2.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Account Info (read-only) -->
+          <div style="background:#f8fafc; border-radius:8px; padding:14px 16px;
+                      margin-bottom:20px; font-size:13px;">
+            <div style="color:#94a3b8; font-size:11px; font-weight:600; margin-bottom:6px; text-transform:uppercase;">Account Info</div>
+            <div><strong>Username:</strong> {{ request.user.username }}</div>
+            <div><strong>Role:</strong> {{ request.user.get_role_display }}</div>
+            <div><strong>Joined:</strong> {{ request.user.date_joined|date:"d M Y" }}</div>
+          </div>
+
+          <button type="submit" class="btn btn-warning px-4" style="color:white;">
+            <i class="fas fa-key me-2"></i>Change Password
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

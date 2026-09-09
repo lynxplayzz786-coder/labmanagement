@@ -1,0 +1,66 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Access Denied — LabMS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #1e2a3a 0%, #0f172a 50%, #1a2744 100%);
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      color: white;
+    }
+    .container { text-align: center; padding: 40px 20px; max-width: 520px; }
+    .error-code {
+      font-size: 100px; font-weight: 700; line-height: 1;
+      background: linear-gradient(135deg, #ef4444, #f59e0b);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .error-icon { font-size: 48px; margin: 16px 0; opacity: 0.7; }
+    h1 { font-size: 24px; font-weight: 600; margin-bottom: 12px; }
+    p { font-size: 14px; color: rgba(255,255,255,0.5); line-height: 1.7; margin-bottom: 32px; }
+    .btn-home {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, #4f8ef7, #7c3aed);
+      color: white; text-decoration: none;
+      padding: 12px 28px; border-radius: 10px;
+      font-size: 14px; font-weight: 600;
+      transition: all 0.2s; box-shadow: 0 4px 20px rgba(79,142,247,0.4);
+    }
+    .btn-home:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(79,142,247,0.5); }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 8px;
+      color: rgba(255,255,255,0.4); text-decoration: none;
+      padding: 12px 20px; font-size: 13px; transition: all 0.2s;
+    }
+    .btn-back:hover { color: rgba(255,255,255,0.7); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="error-code">403</div>
+    <div class="error-icon">🚫</div>
+    <h1>Access Denied</h1>
+    <p>
+      You don't have permission to view this page.
+      This area is restricted to authorized users only.
+      Please contact the administrator if you believe this is an error.
+    </p>
+    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <a href="/dashboard/" class="btn-home">
+        <i class="fas fa-home"></i> Go to Dashboard
+      </a>
+      <a href="javascript:history.back()" class="btn-back">
+        <i class="fas fa-arrow-left"></i> Go Back
+      </a>
+    </div>
+  </div>
+</body>
+</html>

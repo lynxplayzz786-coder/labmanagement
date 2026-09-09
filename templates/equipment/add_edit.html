@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Equipment{% endblock %}
+{% block page_title %}{{ action }} Equipment{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{{ action }} Equipment</h1>
+  <div class="breadcrumb">
+    <a href="{% url 'equipment:list' %}">Equipment</a> /
+    {% if eq %}<a href="{% url 'equipment:detail' eq.pk %}">{{ eq.name }}</a> / {% endif %}
+    {{ action }}
+  </div>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header">
+        <h5>
+          <i class="fas {% if action == 'Add' %}fa-plus-circle{% else %}fa-edit{% endif %} me-2 text-primary"></i>
+          {{ action }} Equipment Details
+        </h5>
+      </div>
+      <div class="card-body">
+        <form method="POST" enctype="multipart/form-data" id="equipmentForm">
+          {% csrf_token %}
+
+          <div class="row g-3">
+            <!-- Name -->
+            <div class="col-12">
+              <label class="form-label">Equipment Name <span style="color:#ef4444">*</span></label>
+              <input type="text" name="name"
+                     class="form-control {% if form.name.errors %}is-invalid{% endif %}"
+                     value="{{ form.name.value|default:'' }}"
+                     placeholder="e.g., Arduino Uno" required>
+              {% if form.name.errors %}<div class="invalid-feedback">{{ form.name.errors.0 }}</div>{% endif %}
+            </div>
+
+            <!-- Category + Lab -->
+            <div class="col-md-6">
+              <label class="form-label">Category <span style="color:#ef4444">*</span></label>
+              <select name="category" class="form-select {% if form.category.errors %}is-invalid{% endif %}" required>
+                <option value="">-- Select Category --</option>
+                {% for cat in form.category.field.queryset %}
+                <option value="{{ cat.pk }}"
+                  {% if form.category.value|stringformat:"s" == cat.pk|stringformat:"s" %}selected{% endif %}>
+                  {{ cat.name }}
+                </option>
+                {% endfor %}
+              </select>
+              {% if form.category.errors %}<div class="invalid-feedback">{{ form.category.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Lab <span style="color:#ef4444">*</span></label>
+              <select name="lab" class="form-select {% if form.lab.errors %}is-invalid{% endif %}" required>
+                <option value="">-- Select Lab --</option>
+                {% for lab in form.lab.field.queryset %}
+                <option value="{{ lab.pk }}"
+                  {% if form.lab.value|stringformat:"s" == lab.pk|stringformat:"s" %}selected{% endif %}>
+                  {{ lab.name }}
+                </option>
+                {% endfor %}
+              </select>
+              {% if form.lab.errors %}<div class="invalid-feedback">{{ form.lab.errors.0 }}</div>{% endif %}
+            </div>
+
+            <!-- Quantity + Available -->
+            <div class="col-md-6">
+              <label class="form-label">Total Quantity <span style="color:#ef4444">*</span></label>
+              <input type="number" name="quantity" min="1"
+                     class="form-control {% if form.quantity.errors %}is-invalid{% endif %}"
+                     value="{{ form.quantity.value|default:1 }}" required>
+              {% if form.quantity.errors %}<div class="invalid-feedback">{{ form.quantity.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Available Quantity <span style="color:#ef4444">*</span></label>
+              <input type="number" name="available_quantity" min="0"
+                     class="form-control {% if form.available_quantity.errors %}is-invalid{% endif %}"
+                     value="{{ form.available_quantity.value|default:1 }}" required>
+              {% if form.available_quantity.errors %}<div class="invalid-feedback">{{ form.available_quantity.errors.0 }}</div>{% endif %}
+              <div style="font-size:11px; color:#94a3b8; margin-top:4px;">Cannot exceed Total Quantity.</div>
+            </div>
+
+            <!-- Purchase Date -->
+            <div class="col-md-6">
+              <label class="form-label">Purchase Date</label>
+              <input type="date" name="purchase_date"
+                     class="form-control"
+                     value="{{ form.purchase_date.value|default:'' }}">
+            </div>
+
+            <!-- Image -->
+            <div class="col-md-6">
+              <label class="form-label">Equipment Image</label>
+              <input type="file" name="image" class="form-control" accept="image/*">
+              {% if eq and eq.image %}
+              <div style="font-size:11px; color:#94a3b8; margin-top:4px;">
+                Current: <a href="{{ eq.image.url }}" target="_blank">View image</a>
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- Description -->
+            <div class="col-12">
+              <label class="form-label">Description</label>
+              <textarea name="description" rows="3" class="form-control"
+                        placeholder="Brief description of the equipment…">{{ form.description.value|default:'' }}</textarea>
+            </div>
+          </div>
+
+          <!-- Non-field errors -->
+          {% if form.non_field_errors %}
+          <div class="alert alert-danger mt-3" style="font-size:13px;">
+            <i class="fas fa-exclamation-circle me-2"></i>{{ form.non_field_errors.0 }}
+          </div>
+          {% endif %}
+
+          <!-- Buttons -->
+          <div class="d-flex gap-3 mt-4">
+            <button type="submit" class="btn btn-primary px-4">
+              <i class="fas fa-save me-2"></i>{{ action }} Equipment
+            </button>
+            <a href="{% if eq %}{% url 'equipment:detail' eq.pk %}{% else %}{% url 'equipment:list' %}{% endif %}"
+               class="btn btn-outline-primary px-4">
+              <i class="fas fa-times me-2"></i>Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% block title %}Resolve Maintenance{% endblock %}
+{% block page_title %}Maintenance Update{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Maintenance Update</h1>
+  <div class="breadcrumb">
+    <a href="{% url 'bookings:maintenance_list' %}">Maintenance</a> / Update #{{ record.pk }}
+  </div>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <!-- Record Summary -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5><i class="fas fa-info-circle me-2 text-primary"></i>Maintenance Details</h5>
+      </div>
+      <div class="card-body">
+        <div class="row g-3" style="font-size:13px;">
+          <div class="col-sm-6">
+            <div style="font-size:11px; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:4px;">Equipment</div>
+            <div style="font-weight:600;">{{ record.equipment.name }}</div>
+            <div style="font-size:11px; color:#94a3b8; font-family:monospace;">{{ record.equipment.asset_id }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:11px; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:4px;">Lab</div>
+            <div>{{ record.equipment.lab.name }}</div>
+          </div>
+          <div class="col-12">
+            <div style="font-size:11px; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:4px;">Issue Description</div>
+            <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px;
+                        padding:10px 14px; line-height:1.6;">
+              {{ record.issue_description }}
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div style="font-size:11px; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:4px;">Qty Affected</div>
+            <div style="font-size:20px; font-weight:700; color:#ef4444;">{{ record.quantity_affected }}</div>
+          </div>
+          <div class="col-sm-4">
+            <div style="font-size:11px; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:4px;">Reported By</div>
+            <div>{{ record.reported_by.username|default:"—" }}</div>
+          </div>
+          <div class="col-sm-4">
+            <div style="font-size:11px; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:4px;">Current Status</div>
+            <span class="badge-status
+              {% if record.status == 'pending' %}badge-pending
+              {% elif record.status == 'in_progress' %}badge-approved
+              {% else %}badge-completed{% endif %}">
+              {{ record.get_status_display }}
+            </span>
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:11px; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:4px;">Current Available Stock</div>
+            <div style="font-weight:600;">{{ record.equipment.available_quantity }} / {{ record.equipment.quantity }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:11px; color:#94a3b8; font-weight:600; text-transform:uppercase; margin-bottom:4px;">Will restore (if resolved)</div>
+            <div style="font-weight:600; color:#22c55e;">
+              +{{ record.quantity_affected }} units →
+              {{ record.equipment.available_quantity|add:record.quantity_affected }} available
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resolve / Update Form -->
+    <div class="card">
+      <div class="card-header">
+        <h5><i class="fas fa-tools me-2 text-warning"></i>Update Maintenance Status</h5>
+      </div>
+      <div class="card-body">
+        {% if record.status == 'resolved' %}
+        <div class="alert alert-success">
+          <i class="fas fa-check-circle me-2"></i>
+          This maintenance record has already been resolved on
+          {{ record.resolved_at|date:"d M Y" }} by {{ record.resolved_by.username }}.
+        </div>
+        <a href="{% url 'bookings:maintenance_list' %}" class="btn btn-outline-primary">
+          <i class="fas fa-arrow-left me-2"></i>Back to Maintenance
+        </a>
+        {% else %}
+        <form method="POST" action="{% url 'bookings:maintenance_resolve' record.pk %}">
+          {% csrf_token %}
+
+          <!-- Status Choice -->
+          <div class="mb-3">
+            <label class="form-label">Update Status <span style="color:#ef4444">*</span></label>
+            <div class="d-flex flex-column gap-2 mt-2">
+              <label style="display:flex; align-items:center; gap:10px; padding:12px 16px;
+                            border:1.5px solid #fde68a; border-radius:8px; cursor:pointer;
+                            background:#fffbeb;">
+                <input type="radio" name="new_status" value="in_progress"
+                       {% if form.new_status.value == 'in_progress' %}checked{% endif %}
+                       style="accent-color:#f59e0b;">
+                <span><strong>🔧 Mark as In Progress</strong></span>
+              </label>
+              <label style="display:flex; align-items:center; gap:10px; padding:12px 16px;
+                            border:1.5px solid #bbf7d0; border-radius:8px; cursor:pointer;
+                            background:#f0fdf4;">
+                <input type="radio" name="new_status" value="resolved"
+                       {% if form.new_status.value == 'resolved' %}checked{% endif %}
+                       style="accent-color:#22c55e;">
+                <span>
+                  <strong>✅ Mark as Resolved</strong>
+                  <div style="font-size:12px; color:#15803d; margin-top:2px;">
+                    Stock will be restored: +{{ record.quantity_affected }} units
+                  </div>
+                </span>
+              </label>
+            </div>
+            {% if form.new_status.errors %}
+            <div style="color:#ef4444; font-size:12px; margin-top:4px;">{{ form.new_status.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Resolution Notes -->
+          <div class="mb-4">
+            <label class="form-label">Resolution Notes <span style="color:#ef4444">*</span></label>
+            <textarea name="resolution_notes" rows="3"
+                      class="form-control {% if form.resolution_notes.errors %}is-invalid{% endif %}"
+                      placeholder="Describe what was done — repaired, replaced, written off, sent to service center…" required>{{ form.resolution_notes.value|default:'' }}</textarea>
+            {% if form.resolution_notes.errors %}
+            <div class="invalid-feedback">{{ form.resolution_notes.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-primary px-4">
+              <i class="fas fa-save me-2"></i>Update Maintenance
+            </button>
+            <a href="{% url 'bookings:maintenance_list' %}" class="btn btn-outline-primary px-4">Cancel</a>
+          </div>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

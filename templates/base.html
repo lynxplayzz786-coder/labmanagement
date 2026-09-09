@@ -1,0 +1,209 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}LabMS{% endblock %} — Lab Equipment Management</title>
+  <meta name="description" content="BCA_29 — Lab Equipment Rental & Management System. Automate equipment booking, tracking and inventory management.">
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+{% if user.is_authenticated %}
+<!-- ══════════════════════════════════════════════════════════
+     SIDEBAR
+══════════════════════════════════════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+
+  <!-- Brand -->
+  <a class="sidebar-brand" href="{% url 'dashboard:index' %}">
+    <div class="brand-logo">
+      <div class="brand-icon"><i class="fas fa-flask"></i></div>
+      <div>
+        <div class="brand-name">LabMS</div>
+        <div class="brand-sub">Equipment Management</div>
+      </div>
+    </div>
+  </a>
+
+  <!-- Logged-in User -->
+  <div class="sidebar-user d-flex align-items-center gap-2">
+    <div class="user-avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
+    <div class="user-info">
+      <div class="user-name">{{ user.get_full_name|default:user.username }}</div>
+      <div class="user-role">{{ user.get_role_display }}</div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav">
+    <ul class="list-unstyled">
+      <li class="nav-section-label">Main</li>
+
+      <li class="nav-item">
+        <a href="{% url 'dashboard:index' %}"
+           class="nav-link {% if request.resolver_match.app_name == 'dashboard' %}active{% endif %}">
+          <i class="fas fa-chart-pie"></i> Dashboard
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{% url 'equipment:list' %}"
+           class="nav-link {% if request.resolver_match.app_name == 'equipment' %}active{% endif %}">
+          <i class="fas fa-microchip"></i> Equipment
+        </a>
+      </li>
+
+      {% if user.can_request_booking %}
+      <li class="nav-section-label">Bookings</li>
+      <li class="nav-item">
+        <a href="{% url 'bookings:my_bookings' %}"
+           class="nav-link {% if request.resolver_match.url_name == 'my_bookings' %}active{% endif %}">
+          <i class="fas fa-calendar-check"></i> My Bookings
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{% url 'bookings:new_booking' %}"
+           class="nav-link {% if request.resolver_match.url_name == 'new_booking' %}active{% endif %}">
+          <i class="fas fa-plus-circle"></i> New Request
+        </a>
+      </li>
+      {% endif %}
+
+      {% if user.can_manage_bookings %}
+      <li class="nav-section-label">Management</li>
+      <li class="nav-item">
+        <a href="{% url 'bookings:manage_bookings' %}"
+           class="nav-link {% if request.resolver_match.url_name == 'manage_bookings' %}active{% endif %}">
+          <i class="fas fa-tasks"></i> Manage Bookings
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{% url 'bookings:maintenance_list' %}"
+           class="nav-link {% if request.resolver_match.url_name == 'maintenance_list' %}active{% endif %}">
+          <i class="fas fa-tools"></i> Maintenance
+        </a>
+      </li>
+      {% endif %}
+
+      {% if user.is_admin_user %}
+      <li class="nav-section-label">Admin</li>
+      <li class="nav-item">
+        <a href="{% url 'equipment:add' %}" class="nav-link {% if request.resolver_match.url_name == 'add' %}active{% endif %}">
+          <i class="fas fa-plus"></i> Add Equipment
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{% url 'dashboard:reports' %}" class="nav-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}">
+          <i class="fas fa-chart-bar"></i> Reports
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="/admin/" class="nav-link" target="_blank">
+          <i class="fas fa-cog"></i> Django Admin
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  <!-- Footer -->
+  <div class="sidebar-footer">
+    <a href="{% url 'accounts:logout' %}">
+      <i class="fas fa-sign-out-alt"></i> Sign Out
+    </a>
+  </div>
+</aside>
+
+<!-- ══════════════════════════════════════════════════════════
+     MAIN WRAPPER
+══════════════════════════════════════════════════════════ -->
+<div class="main-wrapper">
+
+  <!-- Top Navbar -->
+  <nav class="top-navbar">
+    <button class="btn-icon border-0 d-md-none" id="sidebarToggle">
+      <i class="fas fa-bars"></i>
+    </button>
+    <span class="page-title">{% block page_title %}Dashboard{% endblock %}</span>
+    <div class="nav-actions">
+      <div class="btn-icon" title="Equipment List" onclick="window.location='{% url 'equipment:list' %}'">
+        <i class="fas fa-microchip"></i>
+      </div>
+        <div class="dropdown">
+          <div class="btn-icon" data-bs-toggle="dropdown" style="cursor:pointer">
+            <i class="fas fa-user"></i>
+          </div>
+          <ul class="dropdown-menu dropdown-menu-end" style="font-size:13px; min-width:190px;">
+            <li><span class="dropdown-item-text text-muted fw-500">{{ user.get_full_name|default:user.username }}</span></li>
+            <li><span class="dropdown-item-text" style="font-size:11px; color:#94a3b8;">{{ user.get_role_display }}</span></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="fas fa-user-circle me-2"></i>My Profile</a></li>
+            <li><a class="dropdown-item" href="{% url 'accounts:profile_edit' %}"><i class="fas fa-edit me-2"></i>Edit Profile</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Sign Out</a></li>
+          </ul>
+        </div>
+    </div>
+  </nav>
+
+  <!-- Flash Messages -->
+  {% if messages %}
+  <div class="px-4 pt-3">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' or message.tags == 'danger' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Page Content -->
+  <main class="page-content">
+    {% block content %}{% endblock %}
+  </main>
+
+</div><!-- /main-wrapper -->
+
+{% else %}
+  {% block auth_content %}{% endblock %}
+{% endif %}
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+  // Mobile sidebar toggle
+  const toggleBtn = document.getElementById('sidebarToggle');
+  const sidebar = document.getElementById('sidebar');
+  if (toggleBtn && sidebar) {
+    toggleBtn.addEventListener('click', () => sidebar.classList.toggle('open'));
+  }
+
+  // Auto-dismiss alerts after 4s
+  setTimeout(() => {
+    document.querySelectorAll('.alert').forEach(a => {
+      const bsAlert = bootstrap.Alert.getOrCreateInstance(a);
+      bsAlert.close();
+    });
+  }, 4000);
+</script>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

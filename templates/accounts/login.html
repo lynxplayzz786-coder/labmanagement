@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block auth_content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+
+    <!-- Logo -->
+    <div class="auth-logo">
+      <i class="fas fa-flask"></i>
+    </div>
+
+    <h1 class="auth-title">Welcome Back</h1>
+    <p class="auth-subtitle">Sign in to Lab Equipment Management System</p>
+
+    <!-- Error Messages -->
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger mb-3" style="font-size:13px;">
+      <i class="fas fa-exclamation-circle"></i>
+      {{ form.non_field_errors.0 }}
+    </div>
+    {% endif %}
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} mb-3" style="font-size:13px;">
+      <i class="fas fa-info-circle"></i> {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <!-- Login Form -->
+    <form method="POST" action="{% url 'accounts:login' %}" id="loginForm">
+      {% csrf_token %}
+
+      <div class="mb-3">
+        <label class="form-label" for="id_username">
+          <i class="fas fa-user me-1" style="opacity:0.6"></i> Username
+        </label>
+        <input
+          type="text"
+          name="username"
+          id="id_username"
+          class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+          placeholder="Enter your username"
+          value="{{ form.username.value|default:'' }}"
+          required autofocus>
+        {% if form.username.errors %}
+        <div class="invalid-feedback">{{ form.username.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label" for="id_password">
+          <i class="fas fa-lock me-1" style="opacity:0.6"></i> Password
+        </label>
+        <div class="position-relative">
+          <input
+            type="password"
+            name="password"
+            id="id_password"
+            class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+            placeholder="Enter your password"
+            required>
+          <button type="button"
+            onclick="togglePassword()"
+            style="position:absolute; right:12px; top:50%; transform:translateY(-50%);
+                   background:none; border:none; color:rgba(255,255,255,0.3); cursor:pointer;">
+            <i class="fas fa-eye" id="toggleIcon"></i>
+          </button>
+        </div>
+        {% if form.password.errors %}
+        <div class="invalid-feedback d-block">{{ form.password.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="loginBtn">
+        <i class="fas fa-sign-in-alt me-2"></i> Sign In
+      </button>
+    </form>
+
+    <div class="auth-divider">or</div>
+
+    <p class="auth-link">
+      Don't have an account?
+      <a href="{% url 'accounts:register' %}">Register here</a>
+    </p>
+
+    <!-- Demo Credentials -->
+    <div style="margin-top:20px; padding:14px; background:rgba(255,255,255,0.04);
+                border:1px solid rgba(255,255,255,0.08); border-radius:10px;">
+      <p style="font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:8px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">
+        Demo Credentials
+      </p>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:11px; color:rgba(255,255,255,0.5);">
+        <div>👑 admin / abhishek123</div>
+        <div>🔧 staff1 / staff123</div>
+        <div>👨‍🏫 faculty1 / faculty123</div>
+        <div>🎓 student1 / student123</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function togglePassword() {
+  const pwd = document.getElementById('id_password');
+  const icon = document.getElementById('toggleIcon');
+  if (pwd.type === 'password') {
+    pwd.type = 'text';
+    icon.classList.replace('fa-eye', 'fa-eye-slash');
+  } else {
+    pwd.type = 'password';
+    icon.classList.replace('fa-eye-slash', 'fa-eye');
+  }
+}
+
+// Loading state on submit
+document.getElementById('loginForm').addEventListener('submit', function() {
+  const btn = document.getElementById('loginBtn');
+  btn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i> Signing in...';
+  btn.disabled = true;
+});
+</script>
+{% endblock %}

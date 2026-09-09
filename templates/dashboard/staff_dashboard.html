@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% block title %}Staff Dashboard{% endblock %}
+{% block page_title %}Staff Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Staff Dashboard</h1>
+  <div class="breadcrumb">Welcome, <strong>{{ request.user.first_name|default:request.user.username }}</strong> 👋</div>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-3">
+    <div class="stat-card stat-amber">
+      <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
+      <div>
+        <div class="stat-value">{{ pending_count }}</div>
+        <div class="stat-label">Pending</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="stat-card stat-blue">
+      <div class="stat-icon"><i class="fas fa-hand-holding"></i></div>
+      <div>
+        <div class="stat-value">{{ issued_count }}</div>
+        <div class="stat-label">Issued</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="stat-card stat-red">
+      <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+      <div>
+        <div class="stat-value">{{ overdue_count }}</div>
+        <div class="stat-label">Overdue</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="stat-card stat-green">
+      <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
+      <div>
+        <div class="stat-value">{{ today_new }}</div>
+        <div class="stat-label">Today's Requests</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Content Row -->
+<div class="row g-4">
+  <!-- Pending Approvals -->
+  <div class="col-lg-7">
+    <div class="table-card">
+      <div class="card-header">
+        <h5>
+          <i class="fas fa-hourglass-half me-2 text-warning"></i>
+          Pending Approvals
+          {% if pending_count %}
+          <span class="ms-2 badge-status badge-rejected" style="font-size:11px;">{{ pending_count }}</span>
+          {% endif %}
+        </h5>
+        <a href="{% url 'bookings:manage_bookings' %}?status=pending" class="btn btn-sm btn-outline-primary">Manage All</a>
+      </div>
+      <div class="card-body p-0">
+        {% if pending_bookings %}
+        <table class="table">
+          <thead>
+            <tr><th>Ref</th><th>Requester</th><th>Equipment</th><th>Qty</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            {% for b in pending_bookings %}
+            <tr>
+              <td><code style="font-size:11px;">{{ b.booking_ref }}</code></td>
+              <td>
+                <div style="font-weight:500; font-size:13px;">
+                  {{ b.requester.get_full_name|default:b.requester.username }}
+                </div>
+                <div style="font-size:11px; color:#94a3b8;">{{ b.requester.get_role_display }}</div>
+              </td>
+              <td style="font-size:13px;">
+                {{ b.equipment.name|truncatechars:20 }}
+                <div style="font-size:11px; color:#94a3b8;">{{ b.equipment.lab.name }}</div>
+              </td>
+              <td>{{ b.quantity }}</td>
+              <td>
+                <div class="d-flex gap-1">
+                  <form method="POST" action="{% url 'bookings:approve_booking' b.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success btn-sm" title="Approve">
+                      <i class="fas fa-check"></i>
+                    </button>
+                  </form>
+                  <a href="{% url 'bookings:reject_booking' b.pk %}" class="btn btn-danger btn-sm" title="Reject">
+                    <i class="fas fa-times"></i>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state" style="padding:40px 20px;">
+          <i class="fas fa-check-double"></i>
+          <h5>All clear!</h5>
+          <p>No pending requests right now.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Issued / Active Rentals -->
+  <div class="col-lg-5">
+    <div class="table-card">
+      <div class="card-header">
+        <h5><i class="fas fa-hand-holding me-2 text-primary"></i>Active Rentals</h5>
+        <a href="{% url 'bookings:manage_bookings' %}?status=issued" class="btn btn-sm btn-outline-primary">View All</a>
+      </div>
+      <div class="card-body p-0">
+        {% if issued_bookings %}
+        <table class="table">
+          <thead>
+            <tr><th>Equipment</th><th>Due</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            {% for b in issued_bookings %}
+            <tr>
+              <td style="font-size:13px;">
+                <div style="font-weight:500;">{{ b.equipment.name|truncatechars:18 }}</div>
+                <div style="font-size:11px; color:#94a3b8;">
+                  {{ b.requester.get_full_name|default:b.requester.username|truncatechars:14 }}
+                </div>
+              </td>
+              <td style="font-size:12px;">
+                <span class="{% if b.is_overdue %}text-danger fw-bold{% endif %}">
+                  {{ b.required_till }}
+                  {% if b.is_overdue %}<br><small style="color:#ef4444;">OVERDUE</small>{% endif %}
+                </span>
+              </td>
+              <td>
+                <a href="{% url 'bookings:process_return' b.pk %}" class="btn btn-warning btn-sm">
+                  <i class="fas fa-undo"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state" style="padding:40px 20px;">
+          <i class="fas fa-box"></i>
+          <h5>No active rentals</h5>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

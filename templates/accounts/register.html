@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block auth_content %}
+<div class="auth-wrapper">
+  <div class="auth-card" style="max-width:540px;">
+
+    <!-- Logo -->
+    <div class="auth-logo">
+      <i class="fas fa-user-plus"></i>
+    </div>
+
+    <h1 class="auth-title">Create Account</h1>
+    <p class="auth-subtitle">Register to access Lab Equipment Management System</p>
+
+    <!-- Error Messages -->
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger mb-3" style="font-size:13px;">
+      <i class="fas fa-exclamation-circle"></i>
+      {{ form.non_field_errors.0 }}
+    </div>
+    {% endif %}
+
+    <!-- Register Form -->
+    <form method="POST" action="{% url 'accounts:register' %}" id="registerForm">
+      {% csrf_token %}
+
+      <div class="row">
+        <div class="col-6 mb-3">
+          <label class="form-label" for="id_first_name">First Name</label>
+          <input type="text" name="first_name" id="id_first_name"
+            class="form-control {% if form.first_name.errors %}is-invalid{% endif %}"
+            placeholder="Rahul"
+            value="{{ form.first_name.value|default:'' }}" required>
+          {% if form.first_name.errors %}
+          <div class="invalid-feedback">{{ form.first_name.errors.0 }}</div>
+          {% endif %}
+        </div>
+        <div class="col-6 mb-3">
+          <label class="form-label" for="id_last_name">Last Name</label>
+          <input type="text" name="last_name" id="id_last_name"
+            class="form-control {% if form.last_name.errors %}is-invalid{% endif %}"
+            placeholder="Sharma"
+            value="{{ form.last_name.value|default:'' }}" required>
+          {% if form.last_name.errors %}
+          <div class="invalid-feedback">{{ form.last_name.errors.0 }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="id_username">
+          <i class="fas fa-user me-1" style="opacity:0.6"></i> Username
+        </label>
+        <input type="text" name="username" id="id_username"
+          class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+          placeholder="rahul_sharma"
+          value="{{ form.username.value|default:'' }}" required>
+        {% if form.username.errors %}
+        <div class="invalid-feedback">{{ form.username.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="id_email">
+          <i class="fas fa-envelope me-1" style="opacity:0.6"></i> Email
+        </label>
+        <input type="email" name="email" id="id_email"
+          class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+          placeholder="rahul@college.edu"
+          value="{{ form.email.value|default:'' }}" required>
+        {% if form.email.errors %}
+        <div class="invalid-feedback">{{ form.email.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="id_role">
+          <i class="fas fa-id-badge me-1" style="opacity:0.6"></i> Role
+        </label>
+        <select name="role" id="id_role"
+          class="form-select {% if form.role.errors %}is-invalid{% endif %}"
+          onchange="toggleEnrollment(this.value)" required>
+          <option value="">-- Select Role --</option>
+          <option value="student" {% if form.role.value == 'student' %}selected{% endif %}>Student</option>
+          <option value="faculty" {% if form.role.value == 'faculty' %}selected{% endif %}>Faculty</option>
+        </select>
+        <div style="font-size:11px; color:rgba(255,255,255,0.3); margin-top:4px;">
+          Note: Admin and Staff accounts are created by the Administrator only.
+        </div>
+        {% if form.role.errors %}
+        <div class="invalid-feedback">{{ form.role.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <!-- Enrollment No — shown only for students -->
+      <div class="mb-3" id="enrollmentField" style="display:none;">
+        <label class="form-label" for="id_enrollment_no">
+          <i class="fas fa-id-card me-1" style="opacity:0.6"></i> Enrollment Number
+        </label>
+        <input type="text" name="enrollment_no" id="id_enrollment_no"
+          class="form-control"
+          placeholder="BCA2024001"
+          value="{{ form.enrollment_no.value|default:'' }}">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="id_department">Department</label>
+        <input type="text" name="department" id="id_department"
+          class="form-control"
+          placeholder="BCA / B.Tech / MCA"
+          value="{{ form.department.value|default:'' }}">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="id_password1">
+          <i class="fas fa-lock me-1" style="opacity:0.6"></i> Password
+        </label>
+        <input type="password" name="password1" id="id_password1"
+          class="form-control {% if form.password1.errors %}is-invalid{% endif %}"
+          placeholder="Min. 8 characters" required>
+        {% if form.password1.errors %}
+        <div class="invalid-feedback">{{ form.password1.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label" for="id_password2">Confirm Password</label>
+        <input type="password" name="password2" id="id_password2"
+          class="form-control {% if form.password2.errors %}is-invalid{% endif %}"
+          placeholder="Re-enter password" required>
+        {% if form.password2.errors %}
+        <div class="invalid-feedback">{{ form.password2.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="registerBtn">
+        <i class="fas fa-user-plus me-2"></i> Create Account
+      </button>
+    </form>
+
+    <p class="auth-link" style="margin-top:20px;">
+      Already have an account? <a href="{% url 'accounts:login' %}">Sign in</a>
+    </p>
+  </div>
+</div>
+
+<script>
+function toggleEnrollment(role) {
+  const field = document.getElementById('enrollmentField');
+  field.style.display = (role === 'student') ? 'block' : 'none';
+}
+
+// On page load — restore state if validation failed
+window.addEventListener('DOMContentLoaded', () => {
+  const roleVal = document.getElementById('id_role').value;
+  if (roleVal) toggleEnrollment(roleVal);
+});
+
+document.getElementById('registerForm').addEventListener('submit', function() {
+  const btn = document.getElementById('registerBtn');
+  btn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i> Creating...';
+  btn.disabled = true;
+});
+</script>
+{% endblock %}

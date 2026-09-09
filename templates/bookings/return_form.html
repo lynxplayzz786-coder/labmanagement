@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% block title %}Return Equipment — {{ booking.booking_ref }}{% endblock %}
+{% block page_title %}Process Return{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Process Return</h1>
+  <div class="breadcrumb">
+    <a href="{% url 'bookings:manage_bookings' %}?status=issued">Manage Bookings</a> / Return
+  </div>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <!-- Booking Summary Card -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5><i class="fas fa-info-circle me-2 text-primary"></i>Booking Summary</h5>
+      </div>
+      <div class="card-body">
+        <div class="row g-3" style="font-size:13px;">
+          <div class="col-sm-6">
+            <div style="font-size:11px; color:#94a3b8; font-weight:600; text-transform:uppercase;">Reference</div>
+            <code>{{ booking.booking_ref }}</code>
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:11px; color:#94a3b8; font-weight:600; text-transform:uppercase;">Requester</div>
+            <div>{{ booking.requester.get_full_name|default:booking.requester.username }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:11px; color:#94a3b8; font-weight:600; text-transform:uppercase;">Equipment</div>
+            <div style="font-weight:600;">{{ booking.equipment.name }}</div>
+            <div style="font-size:11px; color:#94a3b8; font-family:monospace;">{{ booking.equipment.asset_id }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:11px; color:#94a3b8; font-weight:600; text-transform:uppercase;">Quantity</div>
+            <div>{{ booking.quantity }} unit(s)</div>
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:11px; color:#94a3b8; font-weight:600; text-transform:uppercase;">Issued On</div>
+            <div>{{ booking.issue_log.issued_at|date:"d M Y, h:i A" }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:11px; color:#94a3b8; font-weight:600; text-transform:uppercase;">Expected Return</div>
+            <div class="{% if booking.is_overdue %}text-danger fw-bold{% endif %}">
+              {{ booking.required_till }}
+              {% if booking.is_overdue %}<span class="badge-status badge-rejected ms-1">OVERDUE</span>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Return Form -->
+    <div class="card">
+      <div class="card-header">
+        <h5><i class="fas fa-undo me-2 text-warning"></i>Condition Check</h5>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{% url 'bookings:process_return' booking.pk %}" id="returnForm">
+          {% csrf_token %}
+
+          <!-- Condition Radio -->
+          <div class="mb-4">
+            <label class="form-label fw-600">Equipment Condition <span style="color:#ef4444">*</span></label>
+            <div class="d-flex flex-column gap-2 mt-2">
+              {% for val, label in form.condition_on_return.field.choices %}
+              <label style="display:flex; align-items:center; gap:10px; padding:12px 16px;
+                            border:1.5px solid #e2e8f0; border-radius:8px; cursor:pointer;
+                            transition:all 0.2s;"
+                     id="label_{{ val }}">
+                <input type="radio" name="condition_on_return" value="{{ val }}"
+                       {% if form.condition_on_return.value == val %}checked{% endif %}
+                       onchange="onConditionChange('{{ val }}')"
+                       style="accent-color: var(--primary);">
+                <span>
+                  {% if val == 'good' %}✅{% elif val == 'damaged' %}⚠️{% else %}❌{% endif %}
+                  <strong style="margin-left:4px;">{{ label }}</strong>
+                </span>
+              </label>
+              {% endfor %}
+            </div>
+            {% if form.condition_on_return.errors %}
+            <div style="color:#ef4444; font-size:12px; margin-top:4px;">{{ form.condition_on_return.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Damage/Loss Description — shown only for damaged/lost -->
+          <div class="mb-3" id="damageField" style="display:none;">
+            <label class="form-label">Damage / Loss Description <span style="color:#ef4444">*</span></label>
+            <textarea name="issue_description" rows="3" class="form-control {% if form.issue_description.errors %}is-invalid{% endif %}"
+              placeholder="Describe the damage or explain the loss…"></textarea>
+            {% if form.issue_description.errors %}
+            <div class="invalid-feedback">{{ form.issue_description.errors.0 }}</div>
+            {% endif %}
+            <div style="font-size:11px; color:#f59e0b; margin-top:4px;">
+              <i class="fas fa-exclamation-triangle me-1"></i>
+              Stock will NOT be restored until maintenance is resolved.
+            </div>
+          </div>
+
+          <!-- Remarks -->
+          <div class="mb-4">
+            <label class="form-label">Staff Remarks (optional)</label>
+            <textarea name="remarks" rows="2" class="form-control"
+              placeholder="Any additional notes…"></textarea>
+          </div>
+
+          <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-primary px-4" id="returnBtn">
+              <i class="fas fa-check-circle me-2"></i>Confirm Return
+            </button>
+            <a href="{% url 'bookings:manage_bookings' %}?status=issued" class="btn btn-outline-primary px-4">
+              Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function onConditionChange(val) {
+  const damageField = document.getElementById('damageField');
+  damageField.style.display = (val === 'damaged' || val === 'lost') ? 'block' : 'none';
+
+  // Highlight selected label
+  document.querySelectorAll('[id^="label_"]').forEach(el => {
+    el.style.borderColor = '#e2e8f0';
+    el.style.background  = 'white';
+  });
+  const selected = document.getElementById('label_' + val);
+  if (selected) {
+    selected.style.borderColor = val === 'good' ? '#22c55e' : val === 'damaged' ? '#f59e0b' : '#ef4444';
+    selected.style.background  = val === 'good' ? '#f0fdf4' : val === 'damaged' ? '#fffbeb' : '#fef2f2';
+  }
+}
+
+// Restore state on page load (form re-render after errors)
+window.addEventListener('DOMContentLoaded', () => {
+  const checked = document.querySelector('input[name=condition_on_return]:checked');
+  if (checked) onConditionChange(checked.value);
+});
+
+document.getElementById('returnForm').addEventListener('submit', function() {
+  const btn = document.getElementById('returnBtn');
+  btn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i>Processing…';
+  btn.disabled = true;
+});
+</script>
+{% endblock %}

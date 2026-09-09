@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% block title %}Manage Bookings{% endblock %}
+{% block page_title %}Manage Bookings{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Manage Bookings</h1>
+  <div class="breadcrumb">Home / Manage Bookings</div>
+</div>
+
+<!-- Status Tabs -->
+<div class="d-flex gap-2 mb-4 flex-wrap align-items-center">
+  <a href="?status=pending"
+     class="btn btn-sm {% if status_filter == 'pending' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+    Pending
+    {% if counts.pending %}<span class="ms-1 badge-status badge-rejected" style="font-size:10px; padding:2px 6px;">{{ counts.pending }}</span>{% endif %}
+  </a>
+  <a href="?status=approved"
+     class="btn btn-sm {% if status_filter == 'approved' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+    Approved <small class="ms-1 text-muted">({{ counts.approved }})</small>
+  </a>
+  <a href="?status=issued"
+     class="btn btn-sm {% if status_filter == 'issued' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+    Issued <small class="ms-1 text-muted">({{ counts.issued }})</small>
+  </a>
+  <a href="?status=completed"
+     class="btn btn-sm {% if status_filter == 'completed' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+    Completed <small class="ms-1 text-muted">({{ counts.completed }})</small>
+  </a>
+  <a href="?status=rejected"
+     class="btn btn-sm {% if status_filter == 'rejected' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+    Rejected <small class="ms-1 text-muted">({{ counts.rejected }})</small>
+  </a>
+  <a href="{% url 'bookings:manage_bookings' %}"
+     class="btn btn-sm btn-outline-primary">All</a>
+</div>
+
+<!-- Bookings Table -->
+<div class="table-card">
+  <div class="card-header">
+    <h5><i class="fas fa-tasks me-2 text-primary"></i>
+      {% if status_filter %}{{ status_filter|title }} Bookings{% else %}All Bookings{% endif %}
+      ({{ bookings.count }})
+    </h5>
+  </div>
+  <div class="card-body p-0">
+    {% if bookings %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Ref</th>
+          <th>Requester</th>
+          <th>Equipment</th>
+          <th>Qty</th>
+          <th>Dates</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in bookings %}
+        <tr>
+          <td>
+            <code style="font-size:12px;">{{ b.booking_ref }}</code>
+            {% if b.is_overdue %}
+            <span class="badge-status badge-rejected ms-1" style="font-size:10px;">OVERDUE</span>
+            {% endif %}
+          </td>
+          <td>
+            <div style="font-weight:500;">{{ b.requester.get_full_name|default:b.requester.username }}</div>
+            <div style="font-size:11px; color:#94a3b8;">{{ b.requester.get_role_display }}</div>
+          </td>
+          <td>
+            <a href="{% url 'equipment:detail' b.equipment.pk %}" class="text-decoration-none" style="font-weight:500;">
+              {{ b.equipment.name }}
+            </a>
+            <div style="font-size:11px; color:#94a3b8; font-family:monospace;">{{ b.equipment.asset_id }}</div>
+          </td>
+          <td>{{ b.quantity }}</td>
+          <td style="font-size:12px;">
+            <div>{{ b.required_from }}</div>
+            <div style="color:#94a3b8;">→ {{ b.required_till }}</div>
+          </td>
+          <td>
+            <span class="badge-status badge-{{ b.status }}">{{ b.get_status_display }}</span>
+          </td>
+          <td>
+            <div class="d-flex gap-1 flex-wrap">
+              {% if b.status == 'pending' %}
+                <form method="POST" action="{% url 'bookings:approve_booking' b.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-success btn-sm" title="Approve">
+                    <i class="fas fa-check"></i> Approve
+                  </button>
+                </form>
+                <a href="{% url 'bookings:reject_booking' b.pk %}" class="btn btn-danger btn-sm" title="Reject">
+                  <i class="fas fa-times"></i> Reject
+                </a>
+
+              {% elif b.status == 'approved' %}
+                <form method="POST" action="{% url 'bookings:issue_equipment' b.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-primary btn-sm"
+                    onclick="return confirm('Issue {{ b.quantity }} × {{ b.equipment.name }} to {{ b.requester.get_full_name|default:b.requester.username }}?')"
+                    title="Issue Equipment">
+                    <i class="fas fa-hand-holding me-1"></i>Issue
+                  </button>
+                </form>
+
+              {% elif b.status == 'issued' %}
+                <a href="{% url 'bookings:process_return' b.pk %}" class="btn btn-warning btn-sm" title="Process Return">
+                  <i class="fas fa-undo me-1"></i>Return
+                </a>
+
+              {% else %}
+                <span style="font-size:12px; color:#94a3b8;">—</span>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <i class="fas fa-clipboard-check"></i>
+      <h5>No {{ status_filter|default:"" }} bookings</h5>
+      <p>There are no {{ status_filter|default:"" }} booking requests at the moment.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

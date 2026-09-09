@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block title %}Maintenance Records{% endblock %}
+{% block page_title %}Maintenance{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Maintenance Records</h1>
+  <div class="breadcrumb">Home / Maintenance</div>
+</div>
+
+<!-- Status Tabs -->
+<div class="d-flex gap-2 mb-4 flex-wrap align-items-center">
+  <a href="{% url 'bookings:maintenance_list' %}"
+     class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-outline-primary{% endif %}">
+    All ({{ counts.pending|add:counts.in_progress|add:counts.resolved }})
+  </a>
+  <a href="?status=pending"
+     class="btn btn-sm {% if status_filter == 'pending' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+    ⏳ Pending
+    {% if counts.pending %}<span class="ms-1" style="background:#ef4444;color:white;padding:1px 6px;border-radius:10px;font-size:10px;">{{ counts.pending }}</span>{% endif %}
+  </a>
+  <a href="?status=in_progress"
+     class="btn btn-sm {% if status_filter == 'in_progress' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+    🔧 In Progress <small class="ms-1 text-muted">({{ counts.in_progress }})</small>
+  </a>
+  <a href="?status=resolved"
+     class="btn btn-sm {% if status_filter == 'resolved' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+    ✅ Resolved <small class="ms-1 text-muted">({{ counts.resolved }})</small>
+  </a>
+</div>
+
+<!-- Records Table -->
+<div class="table-card">
+  <div class="card-header">
+    <h5><i class="fas fa-tools me-2 text-warning"></i>
+      {% if status_filter %}{{ status_filter|title }} Records{% else %}All Maintenance Records{% endif %}
+      ({{ records.count }})
+    </h5>
+  </div>
+  <div class="card-body p-0">
+    {% if records %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Equipment</th>
+          <th>Lab</th>
+          <th>Issue</th>
+          <th>Qty</th>
+          <th>Reported By</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in records %}
+        <tr {% if m.status == 'pending' %}style="background:#fffbeb;"{% elif m.status == 'resolved' %}style="background:#f0fdf4;"{% endif %}>
+          <td>
+            <a href="{% url 'equipment:detail' m.equipment.pk %}" class="text-decoration-none" style="font-weight:500;">
+              {{ m.equipment.name }}
+            </a>
+            <div style="font-size:11px; color:#94a3b8; font-family:monospace;">{{ m.equipment.asset_id }}</div>
+          </td>
+          <td style="font-size:13px;">{{ m.equipment.lab.name }}</td>
+          <td style="font-size:13px;">
+            {{ m.issue_description|truncatechars:40 }}
+          </td>
+          <td style="font-weight:600; color:#ef4444;">{{ m.quantity_affected }}</td>
+          <td style="font-size:13px;">{{ m.reported_by.username|default:"—" }}</td>
+          <td>
+            <span class="badge-status
+              {% if m.status == 'pending' %}badge-pending
+              {% elif m.status == 'in_progress' %}badge-approved
+              {% else %}badge-completed{% endif %}">
+              {{ m.get_status_display }}
+            </span>
+          </td>
+          <td style="font-size:12px; color:#94a3b8;">{{ m.created_at|date:"d M Y" }}</td>
+          <td>
+            {% if m.status != 'resolved' %}
+            <a href="{% url 'bookings:maintenance_resolve' m.pk %}"
+               class="btn btn-warning btn-sm" style="color:white;">
+              <i class="fas fa-tools me-1"></i>Update
+            </a>
+            {% else %}
+            <span style="font-size:12px; color:#22c55e;">
+              <i class="fas fa-check me-1"></i>Resolved
+              {% if m.resolved_at %}<br>{{ m.resolved_at|date:"d M Y" }}{% endif %}
+            </span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state" style="padding:50px 20px;">
+      <i class="fas fa-check-circle"></i>
+      <h5>No maintenance records</h5>
+      <p>All equipment is in good condition!</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Note about stock restoration -->
+{% if counts.pending or counts.in_progress %}
+<div style="margin-top:16px; padding:14px 18px; background:#fffbeb;
+            border:1px solid #fcd34d; border-radius:10px; font-size:13px; color:#92400e;">
+  <i class="fas fa-info-circle me-2"></i>
+  <strong>Note:</strong> Equipment stock is NOT restored until maintenance is marked as
+  <strong>Resolved</strong>. Resolving a record will automatically add the affected quantity
+  back to available stock.
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% block title %}Equipment{% endblock %}
+{% block page_title %}Equipment{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header d-flex align-items-start justify-content-between">
+  <div>
+    <h1>Equipment</h1>
+    <div class="breadcrumb">Home / Equipment</div>
+  </div>
+  {% if request.user.is_admin_user %}
+  <a href="{% url 'equipment:add' %}" class="btn btn-primary">
+    <i class="fas fa-plus me-2"></i>Add Equipment
+  </a>
+  {% endif %}
+</div>
+
+<!-- Search & Filter Bar -->
+<form method="GET" action="{% url 'equipment:list' %}">
+  <div class="filter-bar">
+    <!-- Search -->
+    <div class="search-input" style="flex:2; min-width:220px; position:relative;">
+      <i class="fas fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;"></i>
+      <input type="text" name="q" value="{{ request.GET.q }}"
+             class="form-control" style="padding-left:36px;"
+             placeholder="Search by name or asset ID…">
+    </div>
+
+    <!-- Category Filter -->
+    <select name="category" class="form-select" style="width:180px; flex-shrink:0;">
+      <option value="">All Categories</option>
+      {% for cat in form.category.field.queryset %}
+      <option value="{{ cat.pk }}" {% if request.GET.category == cat.pk|stringformat:"s" %}selected{% endif %}>
+        {{ cat.name }}
+      </option>
+      {% endfor %}
+    </select>
+
+    <!-- Lab Filter -->
+    <select name="lab" class="form-select" style="width:180px; flex-shrink:0;">
+      <option value="">All Labs</option>
+      {% for lab in form.lab.field.queryset %}
+      <option value="{{ lab.pk }}" {% if request.GET.lab == lab.pk|stringformat:"s" %}selected{% endif %}>
+        {{ lab.name }}
+      </option>
+      {% endfor %}
+    </select>
+
+    <!-- Status Filter -->
+    <select name="status" class="form-select" style="width:160px; flex-shrink:0;">
+      <option value="">All Status</option>
+      <option value="available"   {% if request.GET.status == 'available' %}selected{% endif %}>Available</option>
+      <option value="unavailable" {% if request.GET.status == 'unavailable' %}selected{% endif %}>Unavailable</option>
+    </select>
+
+    <button type="submit" class="btn btn-primary" style="flex-shrink:0;">
+      <i class="fas fa-filter me-1"></i> Filter
+    </button>
+    {% if request.GET %}
+    <a href="{% url 'equipment:list' %}" class="btn btn-outline-primary" style="flex-shrink:0;">
+      <i class="fas fa-times me-1"></i> Clear
+    </a>
+    {% endif %}
+  </div>
+</form>
+
+<!-- Results Count -->
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <span style="font-size:13px; color:#64748b;">
+    Showing <strong>{{ equipment.paginator.count }}</strong> equipment
+    {% if request.GET.q %}for "<strong>{{ request.GET.q }}</strong>"{% endif %}
+  </span>
+</div>
+
+<!-- Equipment Grid -->
+{% if equipment %}
+<div class="equipment-grid">
+  {% for eq in equipment %}
+  <div class="eq-card">
+    <!-- Image / Icon -->
+    <a href="{% url 'equipment:detail' eq.pk %}" class="text-decoration-none">
+      {% if eq.image %}
+      <img src="{{ eq.image.url }}" alt="{{ eq.name }}"
+           style="width:100%; height:150px; object-fit:cover;">
+      {% else %}
+      <div class="eq-img">
+        {% if 'arduino' in eq.name|lower or 'raspberry' in eq.name|lower %}🤖
+        {% elif 'oscilloscope' in eq.name|lower %}📡
+        {% elif 'multimeter' in eq.name|lower %}🔌
+        {% elif 'projector' in eq.name|lower %}📽️
+        {% elif 'sensor' in eq.name|lower %}🌡️
+        {% elif 'cable' in eq.name|lower or 'network' in eq.name|lower %}🔗
+        {% else %}🔬{% endif %}
+      </div>
+      {% endif %}
+    </a>
+
+    <div class="eq-body">
+      <div class="eq-id">{{ eq.asset_id }}</div>
+      <a href="{% url 'equipment:detail' eq.pk %}" class="text-decoration-none">
+        <div class="eq-name" style="color:#1e293b;">{{ eq.name }}</div>
+      </a>
+      <div class="eq-meta">
+        <span class="eq-tag"><i class="fas fa-microchip me-1"></i>{{ eq.category.name }}</span>
+        <span class="eq-tag"><i class="fas fa-flask me-1"></i>{{ eq.lab.name }}</span>
+      </div>
+    </div>
+
+    <div class="eq-footer">
+      <div class="eq-qty">
+        Available: <span>{{ eq.available_quantity }}</span> / {{ eq.quantity }}
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge-status badge-{{ eq.status }}">{{ eq.get_status_display }}</span>
+        {% if request.user.can_request_booking and eq.status == 'available' %}
+        <a href="{% url 'bookings:new_booking' %}?equipment={{ eq.pk }}"
+           class="btn btn-primary btn-sm">Book</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if equipment.has_other_pages %}
+<nav class="mt-4 d-flex justify-content-center">
+  <ul class="pagination">
+    {% if equipment.has_previous %}
+    <li class="page-item">
+      <a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}page={{ equipment.previous_page_number }}">
+        <i class="fas fa-chevron-left"></i>
+      </a>
+    </li>
+    {% endif %}
+    {% for num in equipment.paginator.page_range %}
+    <li class="page-item {% if num == equipment.number %}active{% endif %}">
+      <a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}page={{ num }}">{{ num }}</a>
+    </li>
+    {% endfor %}
+    {% if equipment.has_next %}
+    <li class="page-item">
+      <a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}page={{ equipment.next_page_number }}">
+        <i class="fas fa-chevron-right"></i>
+      </a>
+    </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <i class="fas fa-box-open"></i>
+    <h5>No equipment found</h5>
+    <p>Try changing your search filters or clear them to see all equipment.</p>
+    <a href="{% url 'equipment:list' %}" class="btn btn-primary btn-sm">Clear Filters</a>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
